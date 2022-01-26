@@ -1,0 +1,230 @@
+﻿@model CrudOperation_With_WebApi.Entity.UserMaster
+
+@{
+    ViewBag.Title = "Create";
+}
+
+<h2>Create</h2>
+
+
+@using (Html.BeginForm("Create","Client",FormMethod.Post, new { id = "productform", enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal">
+        <h4>UserMaster</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <div class="form-group">
+            @Html.HiddenFor(model=>model.Id)
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Email, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Email, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Password, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Password, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Image, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextBoxFor(model => model.Image, new {Type="file", htmlAttributes = new { @class = "form-control" } })
+                <img id="imageshow" height="150" width="150" src="" alt="Alternate Text" />
+                @Html.ValidationMessageFor(model => model.Image, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="button" onclick="SaveData()" value="Create" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+
+    <table id="mytable" class="table  table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Image</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+           <tbody>
+             
+           </tbody>
+    </table>
+}
+
+<div>
+    <a href="#" >content</a>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            alert('sss');
+            ShowData();
+        })
+
+
+        function ShowData() {
+            var tbody = $('#mytable>tbody');
+            
+            $.ajax({
+                type: 'Get',
+                url: ("/api/Client/Index"),
+                data: {},
+                cache: false,
+                success: function (retdata) {
+                    console.log(retdata);
+                    for (var i = 0; i <retdata.length; i++) {
+                        tbody.append('<tr>'+
+                                '<td>' + retdata[i].Id + '</td>' +
+                                '<td>' + retdata[i].Name + '</td>' +
+                                '<td>' + retdata[i].Email + '</td>' +
+                                '<td>' + retdata[i].Password + '</td>' +
+                                '<td> <img height="100px" width="100px" src="' + retdata[i].Image.replace('~', '') + '" />  </td>' +
+                                '<td><a href="#" onclick="EditData(' + retdata[i].Id + ')" class="btn btn-success">Edit</a><a href="#" onclick="DeleteData(' + retdata[i].Id + ')" class="btn btn-danger">Delete</a>  </td>' +
+
+                            '</tr>');
+                    }
+                }
+            })
+
+        }
+        function DeleteData(id) {
+            console.log(id);
+            debugger
+            var model = {
+                Id: id
+            };
+            $.ajax({
+                type: 'POST',
+                url: ("/api/Client/Delete"),
+                data: JSON.stringify(model),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+
+                success: function (retdata) {
+                    console.log(retdata);
+                  
+                    ShowData();
+                }
+            })
+
+
+        }
+
+        function EditData(id) {
+            console.log(id);
+            debugger
+            var model = {
+                Id:id
+            };
+            $.ajax({
+                type: 'POST',
+                url: ("/api/Client/Edit"),
+                data: JSON.stringify(model),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+              
+                success: function (retdata) {
+                    console.log(retdata);
+                    $('#Id').val(retdata.Id);
+                    $('#Name').val(retdata.Name);
+                    $('#Email').val(retdata.Email);
+                    $('#Password').val(retdata.Password);
+                    $('#imageshow').attr('src', retdata.Image.replace('~', ''));
+
+
+                }
+            })
+
+
+        }
+        function SaveData() {
+            var formdatapage = new FormData();
+            var filesdata = $('#Image').get(0).files;
+            var oldimage = $('#imageshow').attr('src');
+            console.log(filesdata);
+            console.log(Id.value);
+            debugger
+            var uid=parseInt(Id.value);
+            if (uid>0)
+            {
+                formdatapage.append("Id", Id.value);
+
+            }
+            debugger
+            formdatapage.append("Name", Name.value);
+            formdatapage.append("Email", Email.value);
+            formdatapage.append("Password", Password.value);
+            
+            if (filesdata.length>0) {
+                formdatapage.append("Image", filesdata[0]);
+            }
+            else
+            {
+                formdatapage.append("Image", oldimage);
+
+            }
+            console.log(Name.value);
+            console.log(Email.value);
+            console.log(Password.value);
+
+
+            $.ajax({
+                type: 'POST',
+                url: ("/api/Client/save"),
+                data: formdatapage,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (retdata) {
+                    if(retdata==1)
+                    {
+                        alert('successfully Save Data');
+                    }
+                    else if (retdata == 2)
+                    {
+                        alert('successfully Update Data');
+
+                    }
+                    else if (retdata == 3)
+                    {
+                        alert('Does Not Valid Extesition Only for Jpg Png Jpeg');
+
+                    }
+                    else if (retdata == 4)
+                    {
+                        alert('Only for 1 Mb Upload Image');
+
+                    }
+                    ShowData();
+                    console.log(retdata);
+                }
+            })
+        }
+    </script>
+}
